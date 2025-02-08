@@ -3,13 +3,13 @@ require("dotenv").config();
 const mongoose = require("mongoose");
 const cors = require("cors");
 const User = require("./models/User");
+const Task = require("./models/Task");
 
 const app = express();
 app.use(express.json());
-// app.use(cors());
 app.use(
   cors({
-    origin: "*", // Allow all origins (for testing)
+    origin: "*",
     methods: "GET,POST,PUT,DELETE",
     credentials: true,
   })
@@ -38,6 +38,34 @@ app.post("/api/users", async (req, res) => {
     res.status(200).json({ message: "User saved successfully", user });
   } catch (error) {
     console.error("Error saving user:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// Create a new task
+app.post("/api/tasks", async (req, res) => {
+  try {
+    const { userId, title, tasks } = req.body;
+    const newTask = new Task({ user: userId, title, tasks });
+
+    await newTask.save();
+    res
+      .status(200)
+      .json({ message: "Task created successfully", task: newTask });
+  } catch (error) {
+    console.error("Error creating task:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+//Get tasks for a specific user
+app.get("/api/tasks", async (req, res) => {
+  try {
+    const { userId } = req.query;
+    const tasks = await Task.find({ user: userId });
+    res.status(200).json({ tasks });
+  } catch (error) {
+    console.error("Error fetching tasks:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
