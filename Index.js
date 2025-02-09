@@ -26,12 +26,13 @@ mongoose
 // Save User to MongoDB
 app.post("/api/users", async (req, res) => {
   try {
-    const { displayName, email } = req.body;
+    const { displayName, email, photo } = req.body;
+    console.log(photo);
 
     let user = await User.findOne({ email });
 
     if (!user) {
-      user = new User({ displayName, email });
+      user = new User({ displayName, email, photo });
       await user.save();
     }
 
