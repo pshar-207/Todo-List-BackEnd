@@ -24,10 +24,9 @@ mongoose
   .catch((err) => console.log(err));
 
 // Save User to MongoDB
-app.post("/api/users", async (req, res) => {
+app.post(`/${process.env.API}/api/createUser`, async (req, res) => {
   try {
     const { displayName, email, photo } = req.body;
-    console.log(photo);
 
     let user = await User.findOne({ email });
 
@@ -44,7 +43,7 @@ app.post("/api/users", async (req, res) => {
 });
 
 // Create a new task
-app.post("/api/tasks", async (req, res) => {
+app.post(`/${process.env.API}/api/createTasks`, async (req, res) => {
   try {
     const { userId, title, tasks } = req.body;
     const newTask = new Task({ user: userId, title, tasks });
@@ -60,7 +59,7 @@ app.post("/api/tasks", async (req, res) => {
 });
 
 //Get tasks for a specific user
-app.get("/api/tasks", async (req, res) => {
+app.get(`/${process.env.API}/api/getAllTasks`, async (req, res) => {
   try {
     const { userId } = req.query;
     const tasks = await Task.find({ user: userId });
@@ -72,7 +71,7 @@ app.get("/api/tasks", async (req, res) => {
 });
 
 // Update an existing task (e.g., mark complete, edit title/task)
-app.put("/api/tasks/:id", async (req, res) => {
+app.put(`/${process.env.API}/api/updateTask/:id`, async (req, res) => {
   try {
     const { title, tasks } = req.body;
     const updatedTaskList = await Task.findByIdAndUpdate(
@@ -90,16 +89,44 @@ app.put("/api/tasks/:id", async (req, res) => {
   }
 });
 
-// Delete a task or task group
-app.delete("/api/tasks/:id", async (req, res) => {
+// Delete a task group
+app.delete(`/${process.env.API}/api/deleteTaskGroup/:_id`, async (req, res) => {
   try {
-    await Task.findByIdAndDelete(req.params.id);
+    await Task.findByIdAndDelete(req.params._id);
     res.status(200).json({ message: "Task deleted successfully" });
   } catch (error) {
     console.error("Error deleting task:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
+
+// Delete a task
+app.delete(
+  `/${process.env.API}/api/deleteTask/:taskName/:taskListId`,
+  async (req, res) => {
+    try {
+      const { taskName, taskListId } = req.params;
+
+      const updatedTaskList = await Task.findOneAndUpdate(
+        { _id: taskListId, "tasks.task": taskName }, // Find the parent document that contains this task
+        { $pull: { tasks: { task: taskName } } }, // Remove the task from the array
+        { new: true } // Return the updated document
+      );
+
+      if (!updatedTaskList) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+
+      res.status(200).json({
+        message: "Task deleted successfully",
+        updatedTaskList,
+      });
+    } catch (error) {
+      console.error("Error deleting task:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
