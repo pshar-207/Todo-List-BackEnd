@@ -31,8 +31,9 @@ app.post(`/${process.env.API}/api/createUser`, async (req, res) => {
     let user = await User.findOne({ email });
 
     if (!user) {
-      user = new User({ displayName, email, photo });
+      user = new User({ displayName, email, photo, theme: "DefaultTheme" });
       await user.save();
+    } else {
     }
 
     res.status(200).json({ message: "User saved successfully", user });
@@ -108,9 +109,9 @@ app.delete(
       const { taskName, taskListId } = req.params;
 
       const updatedTaskList = await Task.findOneAndUpdate(
-        { _id: taskListId, "tasks.task": taskName }, // Find the parent document that contains this task
-        { $pull: { tasks: { task: taskName } } }, // Remove the task from the array
-        { new: true } // Return the updated document
+        { _id: taskListId, "tasks.task": taskName },
+        { $pull: { tasks: { task: taskName } } },
+        { new: true }
       );
 
       if (!updatedTaskList) {
@@ -127,6 +128,24 @@ app.delete(
     }
   }
 );
+
+// Update theme
+app.put(`/${process.env.API}/api/updateTheme`, async (req, res) => {
+  try {
+    const { userId, theme } = req.body;
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { theme },
+      { new: true }
+    );
+
+    res.status(200).json({ message: "Theme updated", user: updatedUser });
+  } catch (error) {
+    console.error("Error updating theme:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
