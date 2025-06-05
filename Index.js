@@ -7,10 +7,13 @@ const Task = require("./models/Task");
 
 const app = express();
 app.use(express.json());
+// Allow only Netlify domain
+const allowedOrigins = ["https://todo-207.netlify.app"];
+
 app.use(
   cors({
-    origin: "*",
-    methods: "GET,POST,PUT,DELETE",
+    origin: allowedOrigins,
+    methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })
 );
