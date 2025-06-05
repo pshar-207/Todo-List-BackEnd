@@ -6,7 +6,7 @@ const User = require("./models/User");
 const Task = require("./models/Task");
 
 const app = express();
-app.use(express.json());
+
 // Allow only Netlify domain
 const allowedOrigins = ["https://todo-207.netlify.app"];
 
@@ -17,6 +17,8 @@ app.use(
     credentials: true,
   })
 );
+
+app.use(express.json());
 
 // Connect to MongoDB
 mongoose
